@@ -1,24 +1,59 @@
-import { createClient } from '@supabase/supabase-js';
-import * as XLSX from 'xlsx';
-import Busboy from 'busboy';
+const { createClient } = require('@supabase/supabase-js');
+const XLSX = require('xlsx');
+const Busboy = require('busboy');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
 );
 
-export const config = { api: { bodyParser: false } };
+module.exports = async function handler(req, res) {
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
-function streamToBuffer(stream) {
+  try {
+    const fileBuffer = await getFileBuffer(req);
+    if (!fileBuffer) return res.status(400).json({ error: 'Файл олдсонгүй' });
+
+    const parsed = parseExcel(fileBuffer.buffer, fileBuffer.filename);
+    const reportDate = parsed.daily.reportDate || new Date().toISOString().slice(0, 10);
+    const id = Math.random().toString(36).slice(2, 8).toUpperCase();
+
+    const { error } = await supabase.from('reports').insert({
+      id,
+      report_date: reportDate,
+      filename: fileBuffer.filename,
+      data: parsed,
+      created_at: new Date().toISOString(),
+    });
+
+    if (error) throw new Error(error.message);
+
+    return res.status(200).json({ id, reportDate, url: `/report/${id}` });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+function getFileBuffer(req) {
   return new Promise((resolve, reject) => {
-    const chunks = [];
-    stream.on('data', d => chunks.push(d));
-    stream.on('end', () => resolve(Buffer.concat(chunks)));
-    stream.on('error', reject);
+    const bb = Busboy({ headers: req.headers });
+    let result = null;
+    bb.on('file', (field, stream, info) => {
+      const chunks = [];
+      stream.on('data', d => chunks.push(d));
+      stream.on('end', () => { result = { buffer: Buffer.concat(chunks), filename: info.filename }; });
+    });
+    bb.on('finish', () => resolve(result));
+    bb.on('error', reject);
+    req.pipe(bb);
   });
 }
 
-function parseExcel(buffer) {
+function parseExcel(buffer, filename) {
   const wb = XLSX.read(buffer, { type: 'buffer', cellDates: true });
   const sheets = wb.SheetNames;
 
@@ -39,9 +74,9 @@ function parseExcel(buffer) {
 
   return {
     daily:  parseDailyReport(dailyRaw),
-    survey: surveyRaw ? parseSurvey(surveyRaw)  : null,
-    trucks: truckRaw  ? parseTrucks(truckRaw)   : null,
-    fuel:   fuelRaw   ? parseFuel(fuelRaw)       : null,
+    survey: surveyRaw ? parseSurvey(surveyRaw) : null,
+    trucks: truckRaw  ? parseTrucks(truckRaw)  : null,
+    fuel:   fuelRaw   ? parseFuel(fuelRaw)     : null,
   };
 }
 
@@ -94,9 +129,8 @@ function parseTrucks(rows) {
     if (!(row[0] instanceof Date)) continue;
     const pk = row[5];
     if (!pk || typeof pk !== 'string' || !pk.match(/TR-\d+/)) continue;
-    const reis = +row[8]||0;
     if (!seen[pk]) seen[pk] = { id: pk, reis: 0 };
-    seen[pk].reis += reis;
+    seen[pk].reis += (+row[8]||0);
   }
   return Object.values(seen);
 }
@@ -111,47 +145,4 @@ function parseFuel(rows) {
     }
   }
   return { totUdur, totShunu, total: totUdur + totShunu };
-}
-
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
-
-  try {
-    const bb = Busboy({ headers: req.headers });
-    let fileBuffer = null;
-    let filename = '';
-
-    bb.on('file', (_, stream, info) => {
-      filename = info.filename;
-      streamToBuffer(stream).then(buf => { fileBuffer = buf; });
-    });
-
-    await new Promise((resolve, reject) => {
-      bb.on('finish', resolve);
-      bb.on('error', reject);
-      req.pipe(bb);
-    });
-
-    if (!fileBuffer) return res.status(400).json({ error: 'Файл олдсонгүй' });
-
-    const parsed = parseExcel(fileBuffer);
-    const reportDate = parsed.daily.reportDate || new Date().toISOString().slice(0, 10);
-
-    // Generate unique 6-char ID
-    const id = Math.random().toString(36).slice(2, 8).toUpperCase();
-
-    const { error } = await supabase.from('reports').insert({
-      id,
-      report_date: reportDate,
-      filename,
-      data: parsed,
-      created_at: new Date().toISOString(),
-    });
-
-    if (error) throw new Error(error.message);
-
-    return res.status(200).json({ id, reportDate, url: `/report/${id}` });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
 }
