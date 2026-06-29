@@ -229,7 +229,7 @@ async function loadReport() {
   if (!id) return showError('ID олдсонгүй', 'URL буруу байна');
 
   try {
-    const res = await fetch('/report/' + id);
+    const res = await fetch('/api/report?id=' + id);
     if (!res.ok) throw new Error('Тайлан олдсонгүй');
     const rec = await res.json();
     render(rec.data, rec.report_date, rec.filename);
