@@ -3,6 +3,6 @@
     { "source": "/upload", "destination": "/api/upload" },
     { "source": "/report/:id", "destination": "/api/report?id=:id" },
     { "source": "/latest", "destination": "/api/latest" },
-    { "source": "/report/:id*", "destination": "/public/report.html" }
+    { "source": "/report/:id*", "destination": "/report.html" }
   ]
 }
