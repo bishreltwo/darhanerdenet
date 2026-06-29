@@ -17,6 +17,11 @@ module.exports = async function handler(req, res) {
     const fileBuffer = await getFileBuffer(req);
     if (!fileBuffer) return res.status(400).json({ error: 'Файл олдсонгүй' });
 
+    const fname = (fileBuffer.filename || '').toLowerCase();
+    if (!fname.includes('main') || !fname.includes('report')) {
+      return res.status(400).json({ error: `Буруу файл: "${fileBuffer.filename}". Зөвхөн Main report файл зөвшөөрнө.` });
+    }
+
     const parsed = parseExcel(fileBuffer.buffer, fileBuffer.filename);
     const reportDate = parsed.daily.reportDate || new Date().toISOString().slice(0, 10);
     const id = Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -74,12 +79,12 @@ function parseExcel(buffer, filename) {
     return null;
   };
 
-  const dailyRaw  = findSheet('DAILY REPORT');
-  const surveyRaw = findSheet('Survey');
-  const truckRaw  = findSheet('TRUCK');
-  const fuelRaw   = findSheet('FUEL Filter');
+  const dailyRaw  = findSheet('DAILY REPORT', 'DAILY', 'ДИСПЕТЧЕР', 'DISPATCHER', 'MAIN');
+  const surveyRaw = findSheet('Survey', 'SURVEY', 'МАРКШ');
+  const truckRaw  = findSheet('TRUCK', 'ТЭЭВЭР', 'TRANSPORT');
+  const fuelRaw   = findSheet('FUEL Filter', 'FUEL', 'ТҮЛШ');
 
-  if (!dailyRaw) throw new Error('DAILY REPORT sheet олдсонгүй');
+  if (!dailyRaw) throw new Error(`DAILY REPORT sheet олдсонгүй. Файлд байгаа sheet-үүд: ${sheets.join(', ')}`);
 
   return {
     daily:  parseDailyReport(dailyRaw),
