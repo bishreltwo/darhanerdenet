@@ -7,67 +7,85 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', Arial, sans-serif; background: #141414; color: #e0e0e0; min-height: 100vh; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #f2ece3; color: #2a1a0a; min-height: 100vh; }
 
-.hdr { background: #0d1a0d; border-bottom: 1px solid #1e3a1e; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-.hdr h1 { font-size: 14px; font-weight: 700; color: #7ed87e; }
-.hdr p  { font-size: 11px; color: #4a6a4a; margin-top: 2px; }
-.hdr-right { font-size: 12px; color: #666; }
+.hdr { background: #1a0f05; padding: 0 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+.hdr-inner { display: flex; align-items: center; gap: 14px; padding: 10px 0; }
+.hdr-badge { display: flex; align-items: center; gap: 8px; border-right: 1px solid #3a2010; padding-right: 14px; }
+.hdr-badge-icon { font-size: 22px; }
+.hdr-badge-name { font-size: 11px; font-weight: 800; color: #f0c090; letter-spacing: 1px; }
+.hdr-badge-since { font-size: 9px; color: #e8841a; }
+.hdr h1 { font-size: 13px; font-weight: 600; color: #e8c090; }
+.hdr p  { font-size: 10px; color: #907060; margin-top: 2px; }
+.hdr-right { font-size: 12px; color: #907060; padding: 10px 0; }
+.hdr-strip { height: 3px; background: linear-gradient(90deg, #d45117, #f0a060 60%, #1a0f05); }
 
 .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 16px; }
-.spinner { width: 32px; height: 32px; border: 2px solid #1e3a1e; border-top-color: #7ed87e; border-radius: 50%; animation: spin 0.7s linear infinite; }
+.spinner { width: 32px; height: 32px; border: 2px solid #e8ddd0; border-top-color: #d45117; border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { font-size: 13px; color: #555; }
+.loading-text { font-size: 13px; color: #b0987a; }
 
 .error-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 12px; text-align: center; padding: 24px; }
 .error-icon { font-size: 40px; }
-.error-title { font-size: 16px; color: #ef9a9a; }
-.error-sub { font-size: 12px; color: #555; }
+.error-title { font-size: 16px; color: #c62828; }
+.error-sub { font-size: 12px; color: #b0987a; }
 
-.kpi-row { display: grid; grid-template-columns: repeat(5,1fr); gap: 1px; background: #1e1e1e; border-bottom: 1px solid #222; }
-.kpi { background: #181818; padding: 10px 14px; }
-.kpi-lbl { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: .5px; }
+.kpi-row { display: grid; grid-template-columns: repeat(5,1fr); gap: 1px; background: #e0d4c8; border-bottom: 1px solid #e0d4c8; }
+.kpi { background: #fff; padding: 10px 14px; }
+.kpi-lbl { font-size: 10px; color: #b0987a; text-transform: uppercase; letter-spacing: .5px; }
 .kpi-val { font-size: 22px; font-weight: 700; margin-top: 3px; }
-.kpi-unit { font-size: 10px; color: #555; margin-top: 2px; }
+.kpi-unit { font-size: 10px; color: #b0987a; margin-top: 2px; }
 @media (max-width:600px) { .kpi-row { grid-template-columns: repeat(2,1fr); } }
 
-.tabs { display: flex; background: #111; border-bottom: 1px solid #222; padding: 0 16px; overflow-x: auto; }
-.tab { padding: 9px 16px; font-size: 12px; color: #666; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
-.tab.active { color: #7ed87e; border-bottom-color: #7ed87e; }
+.tabs { display: flex; background: #fff; border-bottom: 2px solid #e8ddd0; padding: 0 16px; overflow-x: auto; }
+.tab { padding: 9px 16px; font-size: 12px; color: #b0987a; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; margin-bottom: -2px; transition: color 0.15s; }
+.tab:hover { color: #d45117; }
+.tab.active { color: #d45117; border-bottom-color: #d45117; font-weight: 600; }
 
 .tab-content { padding: 16px; display: none; }
 .tab-content.active { display: block; }
 
 .legend { display: flex; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
-.leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #777; }
+.leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #8a7860; }
 .leg-sq { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
 
 .chart-wrap { position: relative; width: 100%; }
-.sec { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: .5px; margin: 14px 0 6px; border-top: 1px solid #222; padding-top: 12px; }
+.sec { font-size: 10px; color: #b0987a; text-transform: uppercase; letter-spacing: .5px; margin: 14px 0 6px; border-top: 1px solid #e8ddd0; padding-top: 12px; }
 
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
 @media(max-width:560px) { .grid2 { grid-template-columns: 1fr; } }
-.panel { background: #1a1a1a; border-radius: 8px; padding: 10px 12px; }
-.panel-title { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.panel { background: #fff; border-radius: 8px; padding: 10px 12px; border: 1px solid #e8ddd0; }
+.panel-title { font-size: 10px; color: #b0987a; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
 
 table.dtable { width: 100%; border-collapse: collapse; font-size: 11px; }
-.dtable th { color: #555; font-weight: 500; text-align: left; padding: 5px 8px; border-bottom: 1px solid #222; font-size: 10px; text-transform: uppercase; white-space: nowrap; }
-.dtable td { padding: 6px 8px; border-bottom: 1px solid #1a1a1a; color: #ccc; white-space: nowrap; }
-.dtable tbody tr:last-child td { font-weight: 600; color: #7ed87e; background: #1a2a1a; border-bottom: none; }
+.dtable th { color: #b0987a; font-weight: 500; text-align: left; padding: 5px 8px; border-bottom: 1px solid #e8ddd0; font-size: 10px; text-transform: uppercase; white-space: nowrap; }
+.dtable td { padding: 6px 8px; border-bottom: 1px solid #f0e8e0; color: #4a3828; white-space: nowrap; }
+.dtable tbody tr:hover td { background: #fdf8f3; }
+.dtable tbody tr:last-child td { font-weight: 600; color: #d45117; background: #fdf0e8; border-bottom: none; }
 
-.diff-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #1e1e1e; font-size:11px; color:#aaa; }
+.diff-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #f0e8e0; font-size:11px; color:#6a5848; }
 .diff-row:last-child { border-bottom:none; }
-.pos { color:#ef5350; } .neg { color:#66bb6a; }
+.pos { color:#c62828; } .neg { color:#2e7d32; }
 
-.footer { background: #0d1a0d; border-top: 1px solid #1e3a1e; padding: 10px 18px; text-align: center; font-size: 11px; color: #3a5a3a; margin-top: 24px; }
+.footer { background: #1a0f05; border-top: 2px solid #d45117; padding: 10px 18px; text-align: center; font-size: 11px; color: #907060; margin-top: 24px; }
 </style>
 </head>
 <body>
 
+<div class="hdr-strip"></div>
 <div class="hdr">
-  <div>
-    <h1>⛰ ДАРХАН ЭРХЭТ МАЙНИНГ ХХК — Диспетчерийн тайлан</h1>
-    <p id="hdrSub">Тайлан ачааллаж байна...</p>
+  <div class="hdr-inner">
+    <div class="hdr-badge">
+      <div class="hdr-badge-icon">⛰</div>
+      <div>
+        <div class="hdr-badge-name">ДАРХАН ЭРХЭТ</div>
+        <div class="hdr-badge-since">Since 1966</div>
+      </div>
+    </div>
+    <div>
+      <h1>Уурхайн зурган мэдээ</h1>
+      <p id="hdrSub">Тайлан ачааллаж байна...</p>
+    </div>
   </div>
   <div class="hdr-right" id="hdrDate">—</div>
 </div>
@@ -95,7 +113,7 @@ table.dtable { width: 100%; border-collapse: collapse; font-size: 11px; }
 
   <div class="tab-content active" id="tab-prod">
     <div class="legend">
-      <div class="leg"><div class="leg-sq" style="background:#2e7d32"></div>Диспетчер бүтээл</div>
+      <div class="leg"><div class="leg-sq" style="background:#d45117"></div>Диспетчер бүтээл</div>
       <div class="leg"><div class="leg-sq" style="background:#42a5f5;border-radius:50%"></div>Маркшейдер хэмжилт</div>
     </div>
     <div class="chart-wrap" style="height:260px;"><canvas id="cProd"></canvas></div>
@@ -119,7 +137,7 @@ table.dtable { width: 100%; border-collapse: collapse; font-size: 11px; }
   <div class="tab-content" id="tab-exo">
     <div class="legend">
       <div class="leg"><div class="leg-sq" style="background:#2a78d6"></div>Өдрийн бүтээл</div>
-      <div class="leg"><div class="leg-sq" style="background:#1baf7a"></div>Шөнийн бүтээл</div>
+      <div class="leg"><div class="leg-sq" style="background:#e8841a"></div>Шөнийн бүтээл</div>
     </div>
     <div class="chart-wrap" style="height:200px;"><canvas id="cExo"></canvas></div>
     <div class="sec">Түлш (литр)</div>
@@ -130,8 +148,8 @@ table.dtable { width: 100%; border-collapse: collapse; font-size: 11px; }
   <div class="tab-content" id="tab-truck">
     <div class="legend">
       <div class="leg"><div class="leg-sq" style="background:#2a78d6"></div>Нийт рейс</div>
-      <div class="leg"><div class="leg-sq" style="background:#bf360c"></div>Түлш ÷ 10</div>
-      <div class="leg"><div style="width:18px;height:2px;background:#1baf7a;border-radius:1px;"></div>л / рейс</div>
+      <div class="leg"><div class="leg-sq" style="background:#d45117"></div>Түлш ÷ 10</div>
+      <div class="leg"><div style="width:18px;height:2px;background:#2e7d32;border-radius:1px;"></div>л / рейс</div>
     </div>
     <div class="chart-wrap" style="height:240px;"><canvas id="cTruck"></canvas></div>
     <div class="grid2" style="margin-top:14px;">
@@ -164,7 +182,7 @@ table.dtable { width: 100%; border-collapse: collapse; font-size: 11px; }
 
 <script>
 const charts = {};
-const gc = '#252525', tc = '#555', tf = { size: 9 };
+const gc = '#ede5da', tc = '#b0987a', tf = { size: 9 };
 
 function mkChart(id, config) {
   if (charts[id]) charts[id].destroy();
@@ -217,18 +235,18 @@ function render(parsed, reportDate, filename) {
   const lastSurvey = survey?.length ? survey[survey.length-1] : null;
 
   document.getElementById('kpiRow').innerHTML = `
-    <div class="kpi"><div class="kpi-lbl">Өдрийн бүтээл</div><div class="kpi-val" style="color:#7ed87e">${exoTotal.toLocaleString()}</div><div class="kpi-unit">м³ · Өдөр+Шөнө</div></div>
-    <div class="kpi"><div class="kpi-lbl">Нийт рейс</div><div class="kpi-val" style="color:#42a5f5">${(tot.reisUdur||0)+(tot.reisShunu||0)}</div><div class="kpi-unit">Өдөр ${tot.reisUdur||0} + Шөнө ${tot.reisShunu||0}</div></div>
-    <div class="kpi"><div class="kpi-lbl">Нийт түлш</div><div class="kpi-val" style="color:#ffb74d">${(tot.fuelTotal||0).toLocaleString()}</div><div class="kpi-unit">литр</div></div>
-    <div class="kpi"><div class="kpi-lbl">Дундаж л/рейс</div><div class="kpi-val" style="color:#ab47bc">${avgRatio}</div><div class="kpi-unit">литр / нэг рейс</div></div>
-    <div class="kpi"><div class="kpi-lbl">Сарын өссөн</div><div class="kpi-val" style="color:#ef5350">${lastSurvey ? lastSurvey.cumDisp.toLocaleString() : '—'}</div><div class="kpi-unit">м³ нийт</div></div>
+    <div class="kpi"><div class="kpi-lbl">Өдрийн бүтээл</div><div class="kpi-val" style="color:#d45117">${exoTotal.toLocaleString()}</div><div class="kpi-unit">м³ · Өдөр+Шөнө</div></div>
+    <div class="kpi"><div class="kpi-lbl">Нийт рейс</div><div class="kpi-val" style="color:#2a78d6">${(tot.reisUdur||0)+(tot.reisShunu||0)}</div><div class="kpi-unit">Өдөр ${tot.reisUdur||0} + Шөнө ${tot.reisShunu||0}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Нийт түлш</div><div class="kpi-val" style="color:#e8841a">${(tot.fuelTotal||0).toLocaleString()}</div><div class="kpi-unit">литр</div></div>
+    <div class="kpi"><div class="kpi-lbl">Дундаж л/рейс</div><div class="kpi-val" style="color:#7b1fa2">${avgRatio}</div><div class="kpi-unit">литр / нэг рейс</div></div>
+    <div class="kpi"><div class="kpi-lbl">Сарын өссөн</div><div class="kpi-val" style="color:#2e7d32">${lastSurvey ? lastSurvey.cumDisp.toLocaleString() : '—'}</div><div class="kpi-unit">м³ нийт</div></div>
   `;
 
   if (survey?.length) {
     const sl = survey.filter(s => s.dispTotal > 0 || s.survMark);
     const lbl = sl.map(s => s.dateStr.slice(5));
-    mkChart('cProd',{type:'bar',data:{labels:lbl,datasets:[{label:'Диспетчер',data:sl.map(s=>s.dispTotal||null),backgroundColor:'#2e7d32',borderRadius:2,borderSkipped:false,yAxisID:'y'},{type:'line',label:'Маркшейдер',data:sl.map(s=>s.survMark||null),borderColor:'#42a5f5',borderWidth:2,borderDash:[5,3],pointRadius:3,pointBackgroundColor:'#42a5f5',fill:false,tension:0.3,yAxisID:'y',spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:{size:8},maxRotation:45,autoSkip:false},grid:{color:'#1c1c1c'}},y:{ticks:{color:tc,font:tf,callback:v=>(v/1000).toFixed(0)+'к'},grid:{color:gc}}}}});
-    mkChart('cCum',{type:'line',data:{labels:lbl,datasets:[{label:'Диспетчер',data:sl.map(s=>s.cumDisp),borderColor:'#7ed87e',borderWidth:2,pointRadius:0,fill:false,tension:0.3},{label:'Маркшейдер',data:sl.map((_,i)=>{let c=0;for(let j=0;j<=i;j++)c+=sl[j].survMark||0;return c||null;}),borderColor:'#42a5f5',borderWidth:2,borderDash:[4,3],pointRadius:0,fill:false,tension:0.3,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:{size:8},maxRotation:45,autoSkip:true,maxTicksLimit:10},grid:{color:'#1c1c1c'}},y:{ticks:{color:tc,font:tf,callback:v=>(v/1000).toFixed(0)+'к'},grid:{color:gc}}}}});
+    mkChart('cProd',{type:'bar',data:{labels:lbl,datasets:[{label:'Диспетчер',data:sl.map(s=>s.dispTotal||null),backgroundColor:'#d45117cc',borderRadius:2,borderSkipped:false,yAxisID:'y'},{type:'line',label:'Маркшейдер',data:sl.map(s=>s.survMark||null),borderColor:'#42a5f5',borderWidth:2,borderDash:[5,3],pointRadius:3,pointBackgroundColor:'#42a5f5',fill:false,tension:0.3,yAxisID:'y',spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:{size:8},maxRotation:45,autoSkip:false},grid:{color:gc}},y:{ticks:{color:tc,font:tf,callback:v=>(v/1000).toFixed(0)+'к'},grid:{color:gc}}}}});
+    mkChart('cCum',{type:'line',data:{labels:lbl,datasets:[{label:'Диспетчер',data:sl.map(s=>s.cumDisp),borderColor:'#d45117',borderWidth:2,pointRadius:0,fill:false,tension:0.3},{label:'Маркшейдер',data:sl.map((_,i)=>{let c=0;for(let j=0;j<=i;j++)c+=sl[j].survMark||0;return c||null;}),borderColor:'#42a5f5',borderWidth:2,borderDash:[4,3],pointRadius:0,fill:false,tension:0.3,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:{size:8},maxRotation:45,autoSkip:true,maxTicksLimit:10},grid:{color:gc}},y:{ticks:{color:tc,font:tf,callback:v=>(v/1000).toFixed(0)+'к'},grid:{color:gc}}}}});
     const wD = sl.filter(s=>s.survMark);
     mkChart('cDiff',{type:'bar',data:{labels:wD.map(s=>s.dateStr.slice(5)),datasets:[{data:wD.map(s=>s.diff),backgroundColor:wD.map(s=>s.diff>0?'#ef535088':'#66bb6a88'),borderColor:wD.map(s=>s.diff>0?'#ef5350':'#66bb6a'),borderWidth:1,borderRadius:2,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:{size:8},maxRotation:45},grid:{display:false}},y:{ticks:{color:tc,font:tf,callback:v=>(v>0?'+':'')+v.toLocaleString()},grid:{color:gc}}}}});
     document.getElementById('diffTable').innerHTML = wD.map(s=>`<div class="diff-row"><span>${s.dateStr.slice(5)}</span><span class="${s.diff>0?'pos':'neg'}">${s.diff>0?'+':''}${s.diff.toLocaleString()} м³ (${(s.diffPct*100).toFixed(1)}%)</span></div>`).join('');
@@ -236,16 +254,16 @@ function render(parsed, reportDate, filename) {
 
   if (d.exo?.length) {
     const ids = d.exo.map(e=>e.id);
-    mkChart('cExo',{type:'bar',data:{labels:ids,datasets:[{label:'Өдөр',data:d.exo.map(e=>e.udur),backgroundColor:'#2a78d6',borderRadius:3,borderSkipped:false},{label:'Шөнө',data:d.exo.map(e=>e.shunu),backgroundColor:'#1baf7a',borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:tf},grid:{display:false}},y:{ticks:{color:tc,font:tf,callback:v=>v.toLocaleString()},grid:{color:gc}}}}});
-    mkChart('cExoFuel',{type:'bar',data:{labels:ids,datasets:[{label:'Өдөр',data:d.exo.map(e=>e.fuelUdur),backgroundColor:'#e65100',borderRadius:3,borderSkipped:false},{label:'Шөнө',data:d.exo.map(e=>e.fuelShunu),backgroundColor:'#bf360c',borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:tf},grid:{display:false}},y:{ticks:{color:tc,font:tf,callback:v=>v+'л'},grid:{color:gc}}}}});
-    document.getElementById('exoTable').innerHTML=`<table class="dtable"><thead><tr><th>Техник</th><th>Модел</th><th>Өдөр м³</th><th>Шөнө м³</th><th>Нийт м³</th><th>Цаг Ө/Ш</th><th>Түлш</th></tr></thead><tbody>${d.exo.map(e=>`<tr><td>${e.id}</td><td style="color:#555">${e.model}</td><td>${e.udur.toLocaleString()}</td><td>${e.shunu.toLocaleString()}</td><td style="color:#7ed87e;font-weight:600">${e.total.toLocaleString()}</td><td>${e.cagUdur}/${e.cagShunu}</td><td>${e.fuelTotal.toLocaleString()}л</td></tr>`).join('')}<tr><td colspan="2">НИЙТ</td><td>${d.exo.reduce((s,e)=>s+e.udur,0).toLocaleString()}</td><td>${d.exo.reduce((s,e)=>s+e.shunu,0).toLocaleString()}</td><td>${exoTotal.toLocaleString()}</td><td>—</td><td>${d.exo.reduce((s,e)=>s+e.fuelTotal,0).toLocaleString()}л</td></tr></tbody></table>`;
+    mkChart('cExo',{type:'bar',data:{labels:ids,datasets:[{label:'Өдөр',data:d.exo.map(e=>e.udur),backgroundColor:'#2a78d6',borderRadius:3,borderSkipped:false},{label:'Шөнө',data:d.exo.map(e=>e.shunu),backgroundColor:'#e8841a',borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:tf},grid:{display:false}},y:{ticks:{color:tc,font:tf,callback:v=>v.toLocaleString()},grid:{color:gc}}}}});
+    mkChart('cExoFuel',{type:'bar',data:{labels:ids,datasets:[{label:'Өдөр',data:d.exo.map(e=>e.fuelUdur),backgroundColor:'#d45117',borderRadius:3,borderSkipped:false},{label:'Шөнө',data:d.exo.map(e=>e.fuelShunu),backgroundColor:'#8d2e0a',borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:tf},grid:{display:false}},y:{ticks:{color:tc,font:tf,callback:v=>v+'л'},grid:{color:gc}}}}});
+    document.getElementById('exoTable').innerHTML=`<table class="dtable"><thead><tr><th>Техник</th><th>Модел</th><th>Өдөр м³</th><th>Шөнө м³</th><th>Нийт м³</th><th>Цаг Ө/Ш</th><th>Түлш</th></tr></thead><tbody>${d.exo.map(e=>`<tr><td>${e.id}</td><td style="color:#b0987a">${e.model}</td><td>${e.udur.toLocaleString()}</td><td>${e.shunu.toLocaleString()}</td><td style="color:#d45117;font-weight:600">${e.total.toLocaleString()}</td><td>${e.cagUdur}/${e.cagShunu}</td><td>${e.fuelTotal.toLocaleString()}л</td></tr>`).join('')}<tr><td colspan="2">НИЙТ</td><td>${d.exo.reduce((s,e)=>s+e.udur,0).toLocaleString()}</td><td>${d.exo.reduce((s,e)=>s+e.shunu,0).toLocaleString()}</td><td>${exoTotal.toLocaleString()}</td><td>—</td><td>${d.exo.reduce((s,e)=>s+e.fuelTotal,0).toLocaleString()}л</td></tr></tbody></table>`;
   }
 
   if (activeTrucks.length) {
     const tL = activeTrucks.map(t=>t.id.replace('TR-',''));
     const ratios = activeTrucks.map(t=>Math.round(t.fuelTotal/t.reisTotal*10)/10);
     const avgR = Math.round(ratios.reduce((a,b)=>a+b,0)/ratios.length*10)/10;
-    mkChart('cTruck',{type:'bar',data:{labels:tL,datasets:[{label:'Рейс',data:activeTrucks.map(t=>t.reisTotal),backgroundColor:'#2a78d6',borderRadius:2,borderSkipped:false,yAxisID:'y'},{label:'Түлш÷10',data:activeTrucks.map(t=>Math.round(t.fuelTotal/10)),backgroundColor:'#bf360c',borderRadius:2,borderSkipped:false,yAxisID:'y'},{type:'line',data:ratios,borderColor:'#1baf7a',borderWidth:2,pointRadius:2,pointBackgroundColor:'#1baf7a',fill:false,tension:0.3,yAxisID:'y2'}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{if(ctx.datasetIndex===0)return 'Рейс: '+ctx.parsed.y;if(ctx.datasetIndex===1)return 'Түлш: '+(ctx.parsed.y*10)+'л';return 'Харьцаа: '+ctx.parsed.y+' л/рейс';}}}},scales:{x:{ticks:{color:tc,font:{size:8},maxRotation:45,autoSkip:false},grid:{color:'#1c1c1c'}},y:{position:'left',ticks:{color:tc,font:tf},grid:{color:gc}},y2:{position:'right',ticks:{color:'#1baf7a',font:tf,callback:v=>v+'л'},grid:{display:false},min:0,max:Math.ceil(Math.max(...ratios)/5)*5+5}}}});
+    mkChart('cTruck',{type:'bar',data:{labels:tL,datasets:[{label:'Рейс',data:activeTrucks.map(t=>t.reisTotal),backgroundColor:'#2a78d6',borderRadius:2,borderSkipped:false,yAxisID:'y'},{label:'Түлш÷10',data:activeTrucks.map(t=>Math.round(t.fuelTotal/10)),backgroundColor:'#d45117cc',borderRadius:2,borderSkipped:false,yAxisID:'y'},{type:'line',data:ratios,borderColor:'#2e7d32',borderWidth:2,pointRadius:2,pointBackgroundColor:'#2e7d32',fill:false,tension:0.3,yAxisID:'y2'}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{if(ctx.datasetIndex===0)return 'Рейс: '+ctx.parsed.y;if(ctx.datasetIndex===1)return 'Түлш: '+(ctx.parsed.y*10)+'л';return 'Харьцаа: '+ctx.parsed.y+' л/рейс';}}}},scales:{x:{ticks:{color:tc,font:{size:8},maxRotation:45,autoSkip:false},grid:{color:gc}},y:{position:'left',ticks:{color:tc,font:tf},grid:{color:gc}},y2:{position:'right',ticks:{color:'#2e7d32',font:tf,callback:v=>v+'л'},grid:{display:false},min:0,max:Math.ceil(Math.max(...ratios)/5)*5+5}}}});
     mkChart('cScatter',{type:'scatter',data:{datasets:[{data:activeTrucks.map(t=>({x:t.reisTotal,y:t.fuelTotal,id:t.id})),backgroundColor:activeTrucks.map(t=>t.fuelTotal/t.reisTotal>avgR?'#ef5350cc':'#2a78d6cc'),pointRadius:5,pointHoverRadius:7}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw.id+': '+ctx.raw.x+' рейс, '+ctx.raw.y+'л'}}},scales:{x:{ticks:{color:tc,font:tf,callback:v=>v+'р'},grid:{color:gc},title:{display:true,text:'Рейс',color:tc,font:{size:9}}},y:{ticks:{color:tc,font:tf,callback:v=>v+'л'},grid:{color:gc},title:{display:true,text:'Түлш (л)',color:tc,font:{size:9}}}}}});
     const bk=['<25','25-28','28-31','31-34','34-37','37+'],cn=[0,0,0,0,0,0];
     ratios.forEach(r=>{if(r<25)cn[0]++;else if(r<28)cn[1]++;else if(r<31)cn[2]++;else if(r<34)cn[3]++;else if(r<37)cn[4]++;else cn[5]++;});
@@ -254,9 +272,9 @@ function render(parsed, reportDate, filename) {
 
   const exoFT = d.exo.reduce((s,e)=>s+e.fuelTotal,0);
   const truckF = (tot.fuelTotal||0)-exoFT;
-  mkChart('cFuelPie',{type:'doughnut',data:{labels:['Дамп машин','Экскаватор','Туслах техник'],datasets:[{data:[truckF>0?truckF:0,exoFT,0],backgroundColor:['#2a78d6','#e65100','#1baf7a'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#666',font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:ctx=>ctx.label+': '+ctx.parsed.toLocaleString()+'л'}}}}});
+  mkChart('cFuelPie',{type:'doughnut',data:{labels:['Дамп машин','Экскаватор','Туслах техник'],datasets:[{data:[truckF>0?truckF:0,exoFT,0],backgroundColor:['#2a78d6','#d45117','#2e7d32'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#8a7860',font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:ctx=>ctx.label+': '+ctx.parsed.toLocaleString()+'л'}}}}});
   const exoFD=d.exo.filter(e=>e.fuelTotal>0);
-  mkChart('cFuelExo',{type:'bar',data:{labels:exoFD.map(e=>e.id),datasets:[{label:'Өдөр',data:exoFD.map(e=>e.fuelUdur),backgroundColor:'#e65100',borderRadius:3,borderSkipped:false},{label:'Шөнө',data:exoFD.map(e=>e.fuelShunu),backgroundColor:'#bf360c',borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#666',font:{size:10},boxWidth:10}}},scales:{x:{ticks:{color:tc,font:tf},grid:{display:false}},y:{ticks:{color:tc,font:tf,callback:v=>v+'л'},grid:{color:gc}}}}});
+  mkChart('cFuelExo',{type:'bar',data:{labels:exoFD.map(e=>e.id),datasets:[{label:'Өдөр',data:exoFD.map(e=>e.fuelUdur),backgroundColor:'#d45117',borderRadius:3,borderSkipped:false},{label:'Шөнө',data:exoFD.map(e=>e.fuelShunu),backgroundColor:'#8d2e0a',borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8a7860',font:{size:10},boxWidth:10}}},scales:{x:{ticks:{color:tc,font:tf},grid:{display:false}},y:{ticks:{color:tc,font:tf,callback:v=>v+'л'},grid:{color:gc}}}}});
 }
 
 loadReport();
