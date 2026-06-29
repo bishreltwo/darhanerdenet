@@ -73,6 +73,12 @@ table.dtable { width: 100%; border-collapse: collapse; font-size: 11px; }
 
 .footer { background: #1a0f05; border-top: 2px solid #d45117; padding: 10px 18px; text-align: center; font-size: 11px; color: #907060; margin-top: 24px; }
 
+.prod-layout { display: flex; gap: 14px; align-items: flex-start; }
+.prod-charts { flex: 1; min-width: 0; }
+.prod-side { width: 200px; flex-shrink: 0; background: #fff; border: 1px solid #e8ddd0; border-radius: 8px; overflow: hidden; max-height: 460px; overflow-y: auto; }
+.prod-side .dtable th { position: sticky; top: 0; background: #fdf8f3; z-index: 1; }
+@media(max-width:640px) { .prod-layout { flex-direction: column; } .prod-side { width: 100%; } }
+
 .aux-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-bottom: 4px; }
 .aux-card { background: #fff; border: 1px solid #e8ddd0; border-radius: 10px; padding: 12px 14px; border-top: 3px solid #2a78d6; transition: box-shadow 0.15s; }
 .aux-card:hover { box-shadow: 0 3px 12px #d451170f; }
@@ -125,7 +131,6 @@ table.dtable { width: 100%; border-collapse: collapse; font-size: 11px; }
   <div class="kpi-row" id="kpiRow"></div>
   <div class="tabs">
     <div class="tab active" data-tab="prod">📈 Бүтээл</div>
-    <div class="tab" data-tab="survey">📐 Маркшейдер</div>
     <div class="tab" data-tab="exo">🦾 Экскаватор</div>
     <div class="tab" data-tab="truck">🚚 Дамп</div>
     <div class="tab" data-tab="aux">🔧 Туслах</div>
@@ -133,24 +138,21 @@ table.dtable { width: 100%; border-collapse: collapse; font-size: 11px; }
   </div>
 
   <div class="tab-content active" id="tab-prod">
-    <div class="legend">
-      <div class="leg"><div class="leg-sq" style="background:#d45117"></div>Диспетчер бүтээл</div>
-      <div class="leg"><div class="leg-sq" style="background:#42a5f5;border-radius:50%"></div>Маркшейдер хэмжилт</div>
-    </div>
-    <div class="chart-wrap" style="height:260px;"><canvas id="cProd"></canvas></div>
-    <div class="sec">Өссөн дүнгээр</div>
-    <div class="chart-wrap" style="height:150px;"><canvas id="cCum"></canvas></div>
-  </div>
-
-  <div class="tab-content" id="tab-survey">
-    <div class="grid2">
-      <div class="panel">
-        <div class="panel-title">Өдөр тутмын зөрүү</div>
-        <div class="chart-wrap" style="height:200px;"><canvas id="cDiff"></canvas></div>
+    <div class="prod-layout">
+      <div class="prod-charts">
+        <div class="legend">
+          <div class="leg"><div class="leg-sq" style="background:#d45117"></div>Диспетчер бүтээл</div>
+          <div class="leg"><div class="leg-sq" style="background:#42a5f5;border-radius:50%"></div>Маркшейдер хэмжилт</div>
+        </div>
+        <div class="chart-wrap" style="height:240px;"><canvas id="cProd"></canvas></div>
+        <div class="sec">Өссөн дүнгээр</div>
+        <div class="chart-wrap" style="height:140px;"><canvas id="cCum"></canvas></div>
       </div>
-      <div class="panel">
-        <div class="panel-title">Зөрүүний дэлгэрэнгүй</div>
-        <div id="diffTable" style="max-height:200px;overflow-y:auto;"></div>
+      <div class="prod-side">
+        <table class="dtable" id="surveyDiffTable">
+          <thead><tr><th>Огноо</th><th style="text-align:right">Зөрүү м³</th></tr></thead>
+          <tbody id="surveyDiffBody"></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -278,9 +280,16 @@ function render(parsed, reportDate, filename) {
     const lbl = sl.map(s => s.dateStr.slice(5));
     mkChart('cProd',{type:'bar',data:{labels:lbl,datasets:[{label:'Диспетчер',data:sl.map(s=>s.dispTotal||null),backgroundColor:'#d45117cc',borderRadius:2,borderSkipped:false,yAxisID:'y'},{type:'line',label:'Маркшейдер',data:sl.map(s=>s.survMark||null),borderColor:'#42a5f5',borderWidth:2,borderDash:[5,3],pointRadius:3,pointBackgroundColor:'#42a5f5',fill:false,tension:0.3,yAxisID:'y',spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:{size:8},maxRotation:45,autoSkip:false},grid:{color:gc}},y:{ticks:{color:tc,font:tf,callback:v=>(v/1000).toFixed(0)+'к'},grid:{color:gc}}}}});
     mkChart('cCum',{type:'line',data:{labels:lbl,datasets:[{label:'Диспетчер',data:sl.map(s=>s.cumDisp),borderColor:'#d45117',borderWidth:2,pointRadius:0,fill:false,tension:0.3},{label:'Маркшейдер',data:sl.map((_,i)=>{let c=0;for(let j=0;j<=i;j++)c+=sl[j].survMark||0;return c||null;}),borderColor:'#42a5f5',borderWidth:2,borderDash:[4,3],pointRadius:0,fill:false,tension:0.3,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:{size:8},maxRotation:45,autoSkip:true,maxTicksLimit:10},grid:{color:gc}},y:{ticks:{color:tc,font:tf,callback:v=>(v/1000).toFixed(0)+'к'},grid:{color:gc}}}}});
-    const wD = sl.filter(s=>s.survMark);
-    mkChart('cDiff',{type:'bar',data:{labels:wD.map(s=>s.dateStr.slice(5)),datasets:[{data:wD.map(s=>s.diff),backgroundColor:wD.map(s=>s.diff>0?'#ef535088':'#66bb6a88'),borderColor:wD.map(s=>s.diff>0?'#ef5350':'#66bb6a'),borderWidth:1,borderRadius:2,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:{size:8},maxRotation:45},grid:{display:false}},y:{ticks:{color:tc,font:tf,callback:v=>(v>0?'+':'')+v.toLocaleString()},grid:{color:gc}}}}});
-    document.getElementById('diffTable').innerHTML = wD.map(s=>`<div class="diff-row"><span>${s.dateStr.slice(5)}</span><span class="${s.diff>0?'pos':'neg'}">${s.diff>0?'+':''}${s.diff.toLocaleString()} м³ (${(s.diffPct*100).toFixed(1)}%)</span></div>`).join('');
+
+    // Survey diff table — shown next to charts (Огноо + Зөрүү only)
+    const allRows = [...sl].reverse();
+    document.getElementById('surveyDiffBody').innerHTML = allRows.map(s => {
+      const hasDiff = s.survMark != null;
+      const diffStr = hasDiff
+        ? `<span class="${s.diff > 0 ? 'pos' : 'neg'}">${s.diff > 0 ? '+' : ''}${s.diff.toLocaleString()}</span>`
+        : `<span style="color:#b0987a">—</span>`;
+      return `<tr><td>${s.dateStr.slice(5)}</td><td style="text-align:right">${diffStr}</td></tr>`;
+    }).join('');
   }
 
   if (d.exo?.length) {
