@@ -1,0 +1,12 @@
+{
+  "functions": {
+    "api/*.js": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    { "source": "/upload", "destination": "/api/upload" },
+    { "source": "/report/:id", "destination": "/api/report?id=:id" },
+    { "source": "/latest", "destination": "/api/latest" }
+  ]
+}

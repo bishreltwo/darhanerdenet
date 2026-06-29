@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Дархан Эрхэт Майнинг — Тайлан оруулах</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f1a0f; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
+
+.card { background: #141414; border: 1px solid #1e3a1e; border-radius: 16px; padding: 36px 32px; width: 100%; max-width: 480px; }
+
+.logo { text-align: center; margin-bottom: 28px; }
+.logo-icon { font-size: 40px; }
+.logo-name { font-size: 15px; font-weight: 700; color: #7ed87e; margin-top: 8px; }
+.logo-sub { font-size: 11px; color: #3a5a3a; margin-top: 4px; }
+
+.upload-zone { border: 2px dashed #2a4a2a; border-radius: 12px; padding: 36px 20px; text-align: center; background: #0f1f0f; cursor: pointer; transition: all 0.2s; position: relative; margin-bottom: 20px; }
+.upload-zone:hover, .upload-zone.drag { border-color: #7ed87e; background: #0f2a0f; }
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upload-zone-icon { font-size: 32px; margin-bottom: 10px; }
+.upload-zone-title { font-size: 14px; font-weight: 600; color: #7ed87e; margin-bottom: 6px; }
+.upload-zone-sub { font-size: 12px; color: #555; }
+
+.btn { width: 100%; padding: 12px; background: #1a3a1a; border: 1px solid #2e5a2e; border-radius: 8px; color: #7ed87e; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+.btn:hover:not(:disabled) { background: #1f4a1f; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.status { margin-top: 16px; padding: 12px 16px; border-radius: 8px; font-size: 13px; display: none; }
+.status.loading { background: #1a2a1a; color: #7ed87e; border: 1px solid #2a4a2a; display: block; }
+.status.success { background: #1a2a1a; color: #7ed87e; border: 1px solid #2e5a2e; display: block; }
+.status.error   { background: #2a0f0f; color: #ef9a9a; border: 1px solid #5a2020; display: block; }
+
+.result-box { margin-top: 20px; background: #0f1f0f; border: 1px solid #2a4a2a; border-radius: 10px; padding: 16px; display: none; }
+.result-box.show { display: block; }
+.result-label { font-size: 11px; color: #3a5a3a; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.result-link { font-size: 13px; color: #42a5f5; word-break: break-all; margin-bottom: 12px; text-decoration: none; }
+.result-link:hover { text-decoration: underline; }
+.copy-btn { width: 100%; padding: 8px; background: #1a2a3a; border: 1px solid #1e3a5a; border-radius: 6px; color: #42a5f5; font-size: 12px; cursor: pointer; margin-bottom: 8px; }
+.copy-btn:hover { background: #1f3a4a; }
+.share-hint { font-size: 11px; color: #3a5a3a; text-align: center; }
+
+.history { margin-top: 24px; }
+.history-title { font-size: 11px; color: #3a5a3a; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.history-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #1a2a1a; font-size: 12px; }
+.history-item:last-child { border-bottom: none; }
+.history-date { color: #aaa; }
+.history-link { color: #42a5f5; text-decoration: none; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">⛰</div>
+    <div class="logo-name">ДАРХАН ЭРХЭТ МАЙНИНГ ХХК</div>
+    <div class="logo-sub">Диспетчерийн тайлан систем</div>
+  </div>
+
+  <div class="upload-zone" id="dropZone">
+    <input type="file" accept=".xlsx,.xls" id="fileInput">
+    <div class="upload-zone-icon">📊</div>
+    <div class="upload-zone-title">Excel файл сонгох</div>
+    <div class="upload-zone-sub">2026_06_28_Main_report.xlsx</div>
+  </div>
+
+  <div id="fileName" style="font-size:12px;color:#3a5a3a;text-align:center;margin-bottom:12px;min-height:18px;"></div>
+
+  <button class="btn" id="uploadBtn" disabled>📤 Тайлан илгээх</button>
+
+  <div class="status" id="status"></div>
+
+  <div class="result-box" id="resultBox">
+    <div class="result-label">Тайлангийн линк</div>
+    <a class="result-link" id="resultLink" href="#" target="_blank"></a>
+    <button class="copy-btn" id="copyBtn">📋 Линк хуулах</button>
+    <div class="share-hint">Энэ линкийг захиралд явуулна уу</div>
+  </div>
+
+  <div class="history" id="historyBox" style="display:none;">
+    <div class="history-title">Өмнөх тайлангууд</div>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<script>
+let selectedFile = null;
+const history = JSON.parse(localStorage.getItem('reportHistory') || '[]');
+
+const dz = document.getElementById('dropZone');
+const fi = document.getElementById('fileInput');
+const btn = document.getElementById('uploadBtn');
+const status = document.getElementById('status');
+const resultBox = document.getElementById('resultBox');
+const resultLink = document.getElementById('resultLink');
+const fileNameEl = document.getElementById('fileName');
+
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); setFile(e.dataTransfer.files[0]); });
+fi.addEventListener('change', e => setFile(e.target.files[0]));
+
+function setFile(file) {
+  if (!file) return;
+  selectedFile = file;
+  fileNameEl.textContent = '📄 ' + file.name;
+  btn.disabled = false;
+}
+
+btn.addEventListener('click', async () => {
+  if (!selectedFile) return;
+  btn.disabled = true;
+  setStatus('loading', '⏳ Файл илгээж байна...');
+  resultBox.classList.remove('show');
+
+  try {
+    const fd = new FormData();
+    fd.append('file', selectedFile);
+
+    const res = await fetch('/upload', { method: 'POST', body: fd });
+    const json = await res.json();
+
+    if (!res.ok) throw new Error(json.error || 'Алдаа гарлаа');
+
+    const fullUrl = window.location.origin + '/report/' + json.id;
+    resultLink.href = fullUrl;
+    resultLink.textContent = fullUrl;
+    resultBox.classList.add('show');
+    setStatus('success', '✅ Тайлан амжилттай илгээгдлээ! · ' + json.reportDate);
+
+    // Save to local history
+    history.unshift({ id: json.id, date: json.reportDate, url: fullUrl });
+    if (history.length > 10) history.pop();
+    localStorage.setItem('reportHistory', JSON.stringify(history));
+    renderHistory();
+  } catch (err) {
+    setStatus('error', '❌ ' + err.message);
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('copyBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(resultLink.href).then(() => {
+    document.getElementById('copyBtn').textContent = '✅ Хуулагдлаа!';
+    setTimeout(() => { document.getElementById('copyBtn').textContent = '📋 Линк хуулах'; }, 2000);
+  });
+});
+
+function setStatus(type, msg) {
+  status.className = 'status ' + type;
+  status.textContent = msg;
+}
+
+function renderHistory() {
+  if (!history.length) return;
+  document.getElementById('historyBox').style.display = 'block';
+  document.getElementById('historyList').innerHTML = history.map(h =>
+    `<div class="history-item"><span class="history-date">${h.date}</span><a class="history-link" href="${h.url}" target="_blank">Нээх →</a></div>`
+  ).join('');
+}
+
+renderHistory();
+</script>
+</body>
+</html>
