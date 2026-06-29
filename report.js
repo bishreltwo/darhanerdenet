@@ -1,11 +1,12 @@
-import { createClient } from '@supabase/supabase-js';
+const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
 );
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
   const { id } = req.query;
   if (!id) return res.status(400).json({ error: 'ID хэрэгтэй' });
 
@@ -19,4 +20,4 @@ export default async function handler(req, res) {
 
   res.setHeader('Cache-Control', 's-maxage=3600');
   return res.status(200).json(data);
-}
+};
