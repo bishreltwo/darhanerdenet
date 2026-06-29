@@ -89,13 +89,31 @@ function parseExcel(buffer, filename) {
   };
 }
 
+function excelDateToStr(v) {
+  if (v instanceof Date && !isNaN(v)) {
+    const y = v.getFullYear();
+    const m = String(v.getMonth() + 1).padStart(2, '0');
+    const d = String(v.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  if (typeof v === 'string') {
+    let t;
+    t = v.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (t) return `${t[1]}-${t[2]}-${t[3]}`;
+    t = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (t) return `${t[3]}-${t[2].padStart(2,'0')}-${t[1].padStart(2,'0')}`;
+    t = v.match(/(\d{4})\.(\d{2})\.(\d{2})/);
+    if (t) return `${t[1]}-${t[2]}-${t[3]}`;
+  }
+  return null;
+}
+
 function parseDailyReport(rows) {
   let reportDate = '';
-  for (let r = 0; r < 5 && !reportDate; r++) {
-    for (let c = 0; c < 6 && !reportDate; c++) {
-      const v = rows[r]?.[c];
-      if (v instanceof Date) reportDate = v.toISOString().slice(0, 10);
-      else if (typeof v === 'string' && v.match(/\d{4}-\d{2}-\d{2}/)) reportDate = v.slice(0, 10);
+  for (let r = 0; r < 8 && !reportDate; r++) {
+    for (let c = 0; c < 10 && !reportDate; c++) {
+      const parsed = excelDateToStr(rows[r]?.[c]);
+      if (parsed) reportDate = parsed;
     }
   }
   const exo = [], auxTech = [], truckDaily = [];
@@ -122,8 +140,7 @@ function parseSurvey(rows) {
   for (const row of rows) {
     const d = row[0];
     let dateStr = '';
-    if (d instanceof Date) dateStr = d.toISOString().slice(0, 10);
-    else if (typeof d === 'string' && d.match(/\d{4}-\d{2}-\d{2}/)) dateStr = d.slice(0, 10);
+    dateStr = excelDateToStr(d) || '';
     if (!dateStr) continue;
     const dispTotal = (+row[1]||0) + (+row[3]||0);
     const survMark  = +row[7] || null;
