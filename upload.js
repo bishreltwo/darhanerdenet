@@ -89,7 +89,7 @@ function parseDailyReport(rows) {
       else if (typeof v === 'string' && v.match(/\d{4}-\d{2}-\d{2}/)) reportDate = v.slice(0, 10);
     }
   }
-  const exo = [], truckDaily = [];
+  const exo = [], auxTech = [], truckDaily = [];
   let totals = null;
   for (const row of rows) {
     const id = row[1];
@@ -100,9 +100,12 @@ function parseDailyReport(rows) {
       truckDaily.push({ id, model: row[2]||'', reisUdur: +row[3]||0, reisShunu: +row[4]||0, reisTotal: (+row[3]||0)+(+row[4]||0), buteel: +row[5]||0, cagUdur: +row[6]||0, cagShunu: +row[7]||0, fuelUdur: +row[8]||0, fuelShunu: +row[9]||0, fuelTotal: +row[10]||0 });
     } else if (id === 'НИЙТ') {
       totals = { reisUdur: +row[3]||0, reisShunu: +row[4]||0, buteel: +row[5]||0, fuelUdur: +row[8]||0, fuelShunu: +row[9]||0, fuelTotal: +row[10]||0 };
+    } else if (/^[A-Z]{2,4}\d{3,5}$/.test(id)) {
+      const note = row[11] != null ? String(row[11]).trim() : '';
+      auxTech.push({ id, model: row[2]||'', cagUdur: +row[6]||0, cagShunu: +row[7]||0, fuelUdur: +row[8]||0, fuelShunu: +row[9]||0, fuelTotal: +row[10]||0, note });
     }
   }
-  return { reportDate, exo, truckDaily, totals };
+  return { reportDate, exo, auxTech, truckDaily, totals };
 }
 
 function parseSurvey(rows) {
