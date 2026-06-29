@@ -2,16 +2,16 @@ const { createClient } = require('@supabase/supabase-js');
 const XLSX = require('xlsx');
 const Busboy = require('busboy');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
-
 module.exports = async function handler(req, res) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+    return res.status(500).json({ error: 'Supabase env var тохируулаагүй байна (SUPABASE_URL, SUPABASE_SERVICE_KEY)' });
+  }
+
+  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
   try {
     const fileBuffer = await getFileBuffer(req);
@@ -40,16 +40,25 @@ module.exports = async function handler(req, res) {
 
 function getFileBuffer(req) {
   return new Promise((resolve, reject) => {
-    const bb = Busboy({ headers: req.headers });
-    let result = null;
-    bb.on('file', (field, stream, info) => {
-      const chunks = [];
-      stream.on('data', d => chunks.push(d));
-      stream.on('end', () => { result = { buffer: Buffer.concat(chunks), filename: info.filename }; });
+    const bodyChunks = [];
+    req.on('data', chunk => bodyChunks.push(chunk));
+    req.on('error', reject);
+    req.on('end', () => {
+      const rawBody = Buffer.concat(bodyChunks);
+      if (!rawBody.length) return resolve(null);
+
+      const bb = Busboy({ headers: req.headers });
+      let result = null;
+      bb.on('file', (field, stream, info) => {
+        const chunks = [];
+        stream.on('data', d => chunks.push(d));
+        stream.on('end', () => { result = { buffer: Buffer.concat(chunks), filename: info.filename }; });
+      });
+      bb.on('finish', () => resolve(result));
+      bb.on('error', reject);
+      bb.write(rawBody);
+      bb.end();
     });
-    bb.on('finish', () => resolve(result));
-    bb.on('error', reject);
-    req.pipe(bb);
   });
 }
 
