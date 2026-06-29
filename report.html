@@ -35,6 +35,10 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f2ece3; color: #
 .kpi-lbl { font-size: 10px; color: #b0987a; text-transform: uppercase; letter-spacing: .5px; }
 .kpi-val { font-size: 22px; font-weight: 700; margin-top: 3px; }
 .kpi-unit { font-size: 10px; color: #b0987a; margin-top: 2px; }
+.kpi-split { display: flex; gap: 6px; margin-top: 6px; border-top: 1px solid #f0e8e0; padding-top: 6px; }
+.kpi-split-item { flex: 1; background: #fdf8f3; border-radius: 4px; padding: 3px 5px; }
+.kpi-split-lbl { display: block; font-size: 9px; color: #b0987a; }
+.kpi-split-val { display: block; font-size: 12px; font-weight: 700; color: #2a1a0a; }
 @media (max-width:600px) { .kpi-row { grid-template-columns: repeat(2,1fr); } }
 
 .tabs { display: flex; background: #fff; border-bottom: 2px solid #e8ddd0; padding: 0 16px; overflow-x: auto; }
@@ -254,13 +258,15 @@ function render(parsed, reportDate, filename) {
   const { daily, survey, trucks, fuel } = parsed;
   const d = daily;
   const tot = d.totals || {};
-  const exoTotal = d.exo.reduce((s,e) => s+e.total, 0);
+  const exoUdur  = d.exo.reduce((s,e) => s+e.udur,  0);
+  const exoShunu = d.exo.reduce((s,e) => s+e.shunu, 0);
+  const exoTotal = exoUdur + exoShunu;
   const activeTrucks = d.truckDaily.filter(t => t.reisTotal > 0 && t.fuelTotal > 0);
   const avgRatio = activeTrucks.length ? Math.round(activeTrucks.reduce((s,t)=>s+t.fuelTotal/t.reisTotal,0)/activeTrucks.length*10)/10 : 0;
   const lastSurvey = survey?.length ? survey[survey.length-1] : null;
 
   document.getElementById('kpiRow').innerHTML = `
-    <div class="kpi"><div class="kpi-lbl">Өдрийн бүтээл</div><div class="kpi-val" style="color:#d45117">${exoTotal.toLocaleString()}</div><div class="kpi-unit">м³ · Өдөр+Шөнө</div></div>
+    <div class="kpi"><div class="kpi-lbl">Өдрийн бүтээл</div><div class="kpi-val" style="color:#d45117">${exoTotal.toLocaleString()}</div><div class="kpi-unit">м³ нийт</div><div class="kpi-split"><div class="kpi-split-item"><span class="kpi-split-lbl">☀ Өдөр</span><span class="kpi-split-val">${exoUdur.toLocaleString()}</span></div><div class="kpi-split-item"><span class="kpi-split-lbl">☾ Шөнө</span><span class="kpi-split-val">${exoShunu.toLocaleString()}</span></div></div></div>
     <div class="kpi"><div class="kpi-lbl">Нийт рейс</div><div class="kpi-val" style="color:#2a78d6">${(tot.reisUdur||0)+(tot.reisShunu||0)}</div><div class="kpi-unit">Өдөр ${tot.reisUdur||0} + Шөнө ${tot.reisShunu||0}</div></div>
     <div class="kpi"><div class="kpi-lbl">Нийт түлш</div><div class="kpi-val" style="color:#e8841a">${(tot.fuelTotal||0).toLocaleString()}</div><div class="kpi-unit">литр</div></div>
     <div class="kpi"><div class="kpi-lbl">Дундаж л/рейс</div><div class="kpi-val" style="color:#7b1fa2">${avgRatio}</div><div class="kpi-unit">литр / нэг рейс</div></div>
